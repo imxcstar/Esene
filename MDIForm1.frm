@@ -110,6 +110,7 @@ Private Sub MDIForm_Activate()
 End Sub
 
 Private Sub MDIForm_Load()
+    Me.Caption = Me.Caption & "-" & App.Major & "." & App.Minor & "." & App.Revision
     AppPath = App.Path
     If Right(AppPath, 1) <> "\" Then AppPath = AppPath & "\"
     ReDim Form2s(0)

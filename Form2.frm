@@ -525,13 +525,17 @@ Private Sub Command2_Click()
         Check1.Enabled = False
         Text1.Enabled = False
         Command2.Caption = "关闭串口"
-        Comm1.CommPort = Val(sMid(LCase(Combo1.Text), "com"))
-        Comm1.InputLen = 64
-        Comm1.InBufferCount = 0
-        Comm1.SThreshold = 0 '一旦发送数据就触发OnComm()事件来检测是否返回数据
-        Comm1.RThreshold = 3 '接收到1个字节数据就立即触发OnComm()事件
-        Comm1.Settings = Combo2.Text & "," & XYZ(Val(Combo3.ListIndex)) & "," & Combo4.Text & "," & Combo5.Text
-        Comm1.InputMode = 1  '这个地方要设置为输入binary模式
+        Comm1.CommPort = Val(sMid(LCase(Combo1.Text), "com")) '设置端口
+        Comm1.Settings = Combo2.Text & "," & XYZ(Val(Combo3.ListIndex)) & "," & Combo4.Text & "," & Combo5.Text '设置波特率 ,校验位,数据位,停止位
+        Comm1.InBufferSize = 1024  '接受缓冲区大小
+        Comm1.OutBufferSize = 1024 '发送缓冲区大小
+        Comm1.InBufferCount = 0   '清空接受缓冲区
+        Comm1.OutBufferCount = 0  '清空发送缓冲区
+        Comm1.InputMode = 1 '设置接收数据模式为二进制形式
+        Comm1.InputLen = 1 '一次读取1个字节数据
+        Comm1.SThreshold = 0 '一次发送所有数据 ,发送数据时不产生OnComm 事件
+        Comm1.RThreshold = 1 '每接收1个字节就产生一个OnComm 事件
+        Comm1.DTREnable = False
         Comm1.PortOpen = True
         BCPZ
         If DSFS = True Then
@@ -660,32 +664,34 @@ Private Sub Comm1_OnComm()
     Dim i As Long
     Dim zc As String, ZC2 As String
     
-    If Comm1.InputLen <> 0 Then
-        tempstr = Comm1.Input
-        jssjbl = jssjbl + UBound(tempstr)
-        Label2.Caption = jssjbl
-        If jsxsms = 1 Then
-            For i = LBound(tempstr) To UBound(tempstr)
-                zc = Hex(tempstr(i))
-                If Len(zc) = 1 Then zc = "0" & zc
-                ZC2 = ZC2 & zc & " "
-            Next i
-            If Len(RichTextBox1.Text) >= 20000 Then RichTextBox1.Text = ""
-            RichTextBox1.SelStart = Len(RichTextBox1.Text)
-            zc = JsRun.Eval("run(""" & ZC2 & """);")
-            If zc <> "" Then
-                Print #SaveTempFile, zc
+    If Comm1.CommEvent = 2 Then
+        If Comm1.InBufferCount <> 0 Then
+            tempstr = Comm1.Input
+            jssjbl = jssjbl + UBound(tempstr)
+            Label2.Caption = jssjbl
+            If jsxsms = 1 Then
+                For i = LBound(tempstr) To UBound(tempstr)
+                    zc = Hex(tempstr(i))
+                    If Len(zc) = 1 Then zc = "0" & zc
+                    ZC2 = ZC2 & zc & " "
+                Next i
+                If Len(RichTextBox1.Text) >= 20000 Then RichTextBox1.Text = ""
+                RichTextBox1.SelStart = Len(RichTextBox1.Text)
+                zc = JsRun.Eval("run(""" & ZC2 & """);")
+                If zc <> "" Then
+                    Print #SaveTempFile, zc
+                End If
+                RichTextBox1.SelText = ZC2
+            Else
+                If Len(RichTextBox1.Text) >= 20000 Then RichTextBox1.Text = ""
+                RichTextBox1.SelStart = Len(RichTextBox1.Text)
+                zc = StrConv(tempstr, vbUnicode)
+                ZC2 = JsRun.Eval("run(""" & Replace(Replace(Replace(zc, Chr(0), ""), Chr(13), ""), Chr(10), "") & """);")
+                If ZC2 <> "" Then
+                    Print #SaveTempFile, ZC2
+                End If
+                RichTextBox1.SelText = zc
             End If
-            RichTextBox1.SelText = ZC2
-        Else
-            If Len(RichTextBox1.Text) >= 20000 Then RichTextBox1.Text = ""
-            RichTextBox1.SelStart = Len(RichTextBox1.Text)
-            zc = StrConv(tempstr, vbUnicode)
-            ZC2 = JsRun.Eval("run(""" & Replace(Replace(Replace(zc, Chr(0), ""), Chr(13), ""), Chr(10), "") & """);")
-            If ZC2 <> "" Then
-                Print #SaveTempFile, ZC2
-            End If
-            RichTextBox1.SelText = zc
         End If
     End If
     Exit Sub
@@ -717,18 +723,13 @@ End Sub
 
 Private Sub SXComK()
     On Error Resume Next
-    Dim i As Integer
+    Dim s As Object
     Combo1.Clear
-    For i = 1 To 100
-        Comm1.CommPort = i
-        If Comm1.PortOpen = False Then
-            Comm1.PortOpen = True
+    For Each s In GetObject("Winmgmts:").InstancesOf("Win32_SerialPortConfiguration")
+        If s.IsBusy = False Then
+            Combo1.AddItem s.Name
         End If
-        If Comm1.PortOpen = True Then
-            Combo1.AddItem "COM" + CStr(i)
-            Comm1.PortOpen = False
-        End If
-    Next i
+    Next s
     Combo1.Text = Combo1.List(0)
 End Sub
 
