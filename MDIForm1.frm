@@ -66,7 +66,7 @@ Public Sub C_DKRW_Click()
             Get #TempFile, , rw
             Close #TempFile
             If App.Major & "." & App.Minor & "." & App.Revision <> rw.RWBB Then
-                MsgBox "任务配置文件版本不一致，可能会导致兼容性问题！" & vbCrLf & "当前任务配置文件版本为:" & rw.RWBB & vbCrLf & "当前软件任务配置文件版本为:" & App.Major & "." & App.Minor & "." & App.Revision
+                MsgBox "任务配置文件版本不一致，可能会导致兼容性问题！" & vbCrLf & "当前任务配置文件版本为:" & rw.RWBB & vbCrLf & "当前软件任务配置文件版本为:" & App.Major & "." & App.Minor & "." & App.Revision, vbSystemModal
             End If
             If rw.RWTYPE = 0 Then
                 Dim ZC4 As New Form5
@@ -120,7 +120,17 @@ Private Sub MDIForm_Load()
 End Sub
 
 Private Sub MDIForm_QueryUnload(Cancel As Integer, UnloadMode As Integer)
-    C_Close_All_Rw_Click
+    If MsgBox("准备关闭，要保存所有任务吗？", vbYesNo) = vbYes Then
+        Dim i As Integer
+        For i = 1 To UBound(Form2s)
+            Unload Form2s(i)
+        Next i
+        ReDim Form2s(0)
+        For i = 1 To UBound(Form5s)
+            Unload Form5s(i)
+        Next i
+        ReDim Form5s(0)
+    End If
     Close #Log_TempFile
     End
 End Sub
