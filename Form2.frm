@@ -97,7 +97,6 @@ Begin VB.Form Form2
       _ExtentX        =   8705
       _ExtentY        =   2566
       _Version        =   393217
-      Enabled         =   -1  'True
       ScrollBars      =   2
       DisableNoScroll =   -1  'True
       Appearance      =   0
@@ -168,7 +167,6 @@ Begin VB.Form Form2
       _ExtentX        =   8705
       _ExtentY        =   3836
       _Version        =   393217
-      Enabled         =   -1  'True
       ReadOnly        =   -1  'True
       ScrollBars      =   2
       DisableNoScroll =   -1  'True
@@ -532,7 +530,7 @@ Private Sub Command2_Click()
         Comm1.InBufferCount = 0   '清空接受缓冲区
         Comm1.OutBufferCount = 0  '清空发送缓冲区
         Comm1.InputMode = 1 '设置接收数据模式为二进制形式
-        Comm1.InputLen = 1 '一次读取1个字节数据
+        Comm1.InputLen = 128 '一次读取1个字节数据
         Comm1.SThreshold = 0 '一次发送所有数据 ,发送数据时不产生OnComm 事件
         Comm1.RThreshold = 1 '每接收1个字节就产生一个OnComm 事件
         Comm1.DTREnable = False
