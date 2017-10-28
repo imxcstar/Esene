@@ -1,6 +1,6 @@
 VERSION 5.00
-Object = "{3B7C8863-D78F-101B-B9B5-04021C009402}#1.2#0"; "RICHTX32.OCX"
-Object = "{648A5603-2C6E-101B-82B6-000000000014}#1.1#0"; "MSCOMM32.OCX"
+Object = "{3B7C8863-D78F-101B-B9B5-04021C009402}#1.2#0"; "richtx32.ocx"
+Object = "{648A5603-2C6E-101B-82B6-000000000014}#1.1#0"; "mscomm32.ocx"
 Begin VB.Form Form2 
    Appearance      =   0  'Flat
    BackColor       =   &H80000005&
@@ -16,6 +16,14 @@ Begin VB.Form Form2
    MDIChild        =   -1  'True
    ScaleHeight     =   7575
    ScaleWidth      =   5715
+   Begin MSCommLib.MSComm SMCKCOM 
+      Left            =   1080
+      Top             =   2400
+      _ExtentX        =   1005
+      _ExtentY        =   1005
+      _Version        =   393216
+      DTREnable       =   -1  'True
+   End
    Begin VB.PictureBox Picture5 
       Appearance      =   0  'Flat
       BackColor       =   &H80000005&
@@ -570,11 +578,11 @@ Private Sub Command3_Click()
         If DSFS = True Then DSFSSJ = zc
         Comm1.Output = zc
     Else
-        Dim ZC2 As String
-        ZC2 = RichTextBox2.Text
-        fssjbl = fssjbl + LenB(ZC2)
-        If DSFS = True Then DSFSSJ2 = ZC2
-        Comm1.Output = ZC2
+        Dim zc2 As String
+        zc2 = RichTextBox2.Text
+        fssjbl = fssjbl + LenB(zc2)
+        If DSFS = True Then DSFSSJ2 = zc2
+        Comm1.Output = zc2
     End If
     Label3.Caption = fssjbl
 End Sub
@@ -660,7 +668,7 @@ Private Sub Comm1_OnComm()
     On Error GoTo ERROR
     Dim tempstr() As Byte
     Dim i As Long
-    Dim zc As String, ZC2 As String
+    Dim zc As String, zc2 As String
     
     If Comm1.CommEvent = 2 Then
         If Comm1.InBufferCount <> 0 Then
@@ -671,22 +679,22 @@ Private Sub Comm1_OnComm()
                 For i = LBound(tempstr) To UBound(tempstr)
                     zc = Hex(tempstr(i))
                     If Len(zc) = 1 Then zc = "0" & zc
-                    ZC2 = ZC2 & zc & " "
+                    zc2 = zc2 & zc & " "
                 Next i
                 If Len(RichTextBox1.Text) >= 20000 Then RichTextBox1.Text = ""
                 RichTextBox1.SelStart = Len(RichTextBox1.Text)
-                zc = JsRun.Eval("run(""" & ZC2 & """);")
+                zc = JsRun.Eval("run(""" & zc2 & """);")
                 If zc <> "" Then
                     Print #SaveTempFile, zc
                 End If
-                RichTextBox1.SelText = ZC2
+                RichTextBox1.SelText = zc2
             Else
                 If Len(RichTextBox1.Text) >= 20000 Then RichTextBox1.Text = ""
                 RichTextBox1.SelStart = Len(RichTextBox1.Text)
-                zc = StrConv(tempstr, vbUnicode)
-                ZC2 = JsRun.Eval("run(""" & Replace(Replace(Replace(zc, Chr(0), ""), Chr(13), ""), Chr(10), "") & """);")
-                If ZC2 <> "" Then
-                    Print #SaveTempFile, ZC2
+                zc = BytesToBstr(tempstr)
+                zc2 = JsRun.Eval("run(""" & Replace(Replace(Replace(zc, Chr(0), ""), Chr(13), ""), Chr(10), "") & """);")
+                If zc2 <> "" Then
+                    Print #SaveTempFile, zc2
                 End If
                 RichTextBox1.SelText = zc
             End If
@@ -722,12 +730,35 @@ End Sub
 Private Sub SXComK()
     On Error Resume Next
     Dim s As Object
+    Dim zc As String
     Combo1.Clear
     For Each s In GetObject("Winmgmts:").InstancesOf("Win32_SerialPortConfiguration")
         If s.IsBusy = False Then
-            Combo1.AddItem s.Name
+            zc = zc & s.Name & ","
         End If
     Next s
+    Dim i As Long
+    On Error Resume Next
+    SMCKCOM.PortOpen = False
+    Dim zc3 As String
+    For i = 1 To 100
+        SMCKCOM.CommPort = i
+        If SMCKCOM.PortOpen = False Then
+            SMCKCOM.PortOpen = True
+        End If
+        If SMCKCOM.PortOpen = True Then
+            zc3 = "COM" & CStr(i)
+            If InStr(LCase(zc), LCase(zc3) & ",") <= 0 Then
+                zc = zc & zc3 & ","
+            End If
+            SMCKCOM.PortOpen = False
+        End If
+    Next i
+    Dim zc2() As String
+    zc2 = Split(zc, ",")
+    For i = 0 To UBound(zc2) - 1
+        Combo1.AddItem zc2(i)
+    Next i
     Combo1.Text = Combo1.List(0)
 End Sub
 
