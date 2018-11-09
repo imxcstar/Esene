@@ -12,6 +12,11 @@ Public Type SJG
     dsfstime As Long
     FSSJ As String
     jtdk As Integer
+    zfdz As String
+    zfdk As Integer
+    zfxz As Integer
+    jssfzdhhxx As Integer
+    fssfzdhhxx As Integer
 End Type
 
 Public Type RWJG
